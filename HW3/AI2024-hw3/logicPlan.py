@@ -44,12 +44,24 @@ DIR_TO_DXDY_MAP = {'North':(0, 1), 'South':(0, -1), 'East':(1, 0), 'West':(-1, 0
 
 def sentence1() -> Expr:
     """Returns a Expr instance that encodes that the following expressions are all true.
+    // using conjunction
     
     A or B
     (not A) if and only if ((not B) or C)
     (not A) or (not B) or C
     """
     "*** BEGIN YOUR CODE HERE ***"
+    
+    a = Expr('A')
+    b = Expr('B')
+    c = Expr('C')
+    
+    first = a | b
+    second = ~a % (~b | c)
+    third = disjoin(~a, ~b, c)
+    
+    return conjoin(first, second, third)
+    
     util.raiseNotDefined()
     "*** END YOUR CODE HERE ***"
 
@@ -63,6 +75,19 @@ def sentence2() -> Expr:
     (not D) implies C
     """
     "*** BEGIN YOUR CODE HERE ***"
+    
+    a = Expr('A')
+    b = Expr('B')
+    c = Expr('C')
+    d = Expr('D')
+    
+    first = c % (b | d)
+    second = a >> (~b & ~d)
+    third = ~(b & ~c) >> a
+    fourth = ~d >> c
+    
+    return conjoin(first, second, third, fourth)
+    
     util.raiseNotDefined()
     "*** END YOUR CODE HERE ***"
 
@@ -80,6 +105,17 @@ def sentence3() -> Expr:
     Pacman is born at time 0.
     """
     "*** BEGIN YOUR CODE HERE ***"
+    
+    a = PropSymbolExpr("PacmanAlive", time=1)
+    b = PropSymbolExpr("PacmanAlive", time=0)
+    c = PropSymbolExpr("PacmanBorn", time=0)
+    d = PropSymbolExpr("PacmanKilled", time=0)
+    
+    first = a % disjoin((b & ~d), (~b & c))
+    second = ~(b & c)
+    third = c
+    
+    return conjoin(first, second, third)
     util.raiseNotDefined()
     "*** END YOUR CODE HERE ***"
 
@@ -96,7 +132,19 @@ def findModelUnderstandingCheck() -> Dict[Expr, bool]:
     """
     a = Expr('A')
     "*** BEGIN YOUR CODE HERE ***"
+    class acceptedLowerExpr:
+        def __init__(self, attr: str):
+            self.attr = attr
+        
+        # make 'a' => a
+        def __repr__(self):
+            return self.attr
+
+    # return {'a': True}
+    return {acceptedLowerExpr('a'): True}
+    
     print("a.__dict__ is:", a.__dict__) # might be helpful for getting ideas
+
     util.raiseNotDefined()
     "*** END YOUR CODE HERE ***"
 
@@ -104,6 +152,14 @@ def entails(premise: Expr, conclusion: Expr) -> bool:
     """Returns True if the premise entails the conclusion and False otherwise.
     """
     "*** BEGIN YOUR CODE HERE ***"
+    
+    # find a counter example that premise is true, but conclusion is false
+    isFindCounterExample = findModel(premise & ~conclusion)
+    if isFindCounterExample != False:
+        return False
+    else:
+        return True
+    
     util.raiseNotDefined()
     "*** END YOUR CODE HERE ***"
 
@@ -112,6 +168,9 @@ def plTrueInverse(assignments: Dict[Expr, bool], inverse_statement: Expr) -> boo
     pl_true may be useful here; see logic.py for its description.
     """
     "*** BEGIN YOUR CODE HERE ***"
+    
+    return pl_true(~inverse_statement, assignments)
+    
     util.raiseNotDefined()
     "*** END YOUR CODE HERE ***"
 
@@ -326,6 +385,8 @@ def positionLogicPlan(problem) -> List:
     KB = []
 
     "*** BEGIN YOUR CODE HERE ***"
+    
+    
     util.raiseNotDefined()
     "*** END YOUR CODE HERE ***"
 
