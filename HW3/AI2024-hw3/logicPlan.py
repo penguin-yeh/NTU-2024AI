@@ -271,7 +271,7 @@ def pacmanSuccessorAxiomSingle(x: int, y: int, time: int, walls_grid: List[List[
     "*** BEGIN YOUR CODE HERE ***"
     
     # Current <==> (previous position at time t-1) & (took action to move to x, y)
-    return conjoin(PropSymbolExpr(pacman_str, x, y, time=now) % disjoin(possible_causes))
+    return PropSymbolExpr(pacman_str, x, y, time=now) % disjoin(possible_causes)
     
     util.raiseNotDefined()
     "*** END YOUR CODE HERE ***"
@@ -417,7 +417,6 @@ def checkLocationSatisfiability(x1_y1: Tuple[int, int], x0_y0: Tuple[int, int], 
     
     return findModel(conjoin(kb, condition)), findModel(conjoin(kb, ~condition))
 
-    
     util.raiseNotDefined()
     "*** END YOUR CODE HERE ***"
 
