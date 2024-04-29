@@ -93,7 +93,7 @@ def joinFactors(factors: List[Factor]):
     if len(factors) > 1:
         intersect = functools.reduce(lambda x, y: x & y, setsOfUnconditioned)
         if len(intersect) > 0:
-            print("Factor failed joinFactors typecheck: ", factor)
+            print("Factor failed joinFactors typecheck: ", factors)
             raise ValueError("unconditionedVariables can only appear in one factor. \n"
                     + "unconditionedVariables: " + str(intersect) + 
                     "\nappear in more than one input factor.\n" + 
@@ -102,7 +102,53 @@ def joinFactors(factors: List[Factor]):
 
 
     "*** YOUR CODE HERE ***"
-    raiseNotDefined()
+    
+    # print(factors)
+    # print(len(factors))
+    factor_list = list(factors)
+    # print(factor_list[0])
+    # print(factor_list[1])
+    # print(Factor.getAllPossibleAssignmentDicts(factor_list[0]))
+    # print(Factor.getAllPossibleAssignmentDicts(factor_list[1]))
+    # print(Factor.getProbability(factor_list[0], Factor.getAllPossibleAssignmentDicts(factor_list[0])[0]))
+    # print(Factor.getProbability(factor_list[1], Factor.getAllPossibleAssignmentDicts(factor_list[0])[0]))
+    # Factor.setProbability(factor_list[0], Factor.getAllPossibleAssignmentDicts(factor_list[0])[0], 0.5)
+    # print(factor_list[0])
+    # print(Factor.unconditionedVariables(factor_list[0]))
+    # print(Factor.conditionedVariables(factor_list[0]))
+    # print(Factor.unconditionedVariables(factor_list[1]))
+    # print(Factor.conditionedVariables(factor_list[1])) 
+    # print(Factor.variableDomainsDict(factor_list[0]))
+    # print(Factor.variableDomainsDict(factor_list[1]))
+    
+    # print("--------")
+    
+    joinConditionedVariables = set()
+    joinUnconditionedVAriables = set()
+    
+    for factor in factors:
+        # print(factor)
+        # print(Factor.conditionedVariables(factor))
+        for conditon in Factor.conditionedVariables(factor):
+            joinConditionedVariables.add(conditon)
+        for unCondition in Factor.unconditionedVariables(factor):
+            joinUnconditionedVAriables.add(unCondition)
+        
+    for unCondition in joinUnconditionedVAriables:
+        if unCondition in joinConditionedVariables:
+            joinConditionedVariables.remove(unCondition)
+    
+    joinFactor = Factor(joinUnconditionedVAriables, joinConditionedVariables, Factor.variableDomainsDict(factor_list[0]))
+    # print(joinFactor)
+    for joinAssignment in Factor.getAllPossibleAssignmentDicts(joinFactor):
+        joinProbability = 1
+        for factor in factors:
+            joinProbability  *= Factor.getProbability(factor, joinAssignment)
+        Factor.setProbability(joinFactor, joinAssignment, joinProbability)
+    
+    return joinFactor
+    
+    # raiseNotDefined()
     "*** END YOUR CODE HERE ***"
 
 ########### ########### ###########
