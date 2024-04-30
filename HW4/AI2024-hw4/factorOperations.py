@@ -199,7 +199,39 @@ def eliminateWithCallTracking(callTrackingList=None):
                     "unconditionedVariables: " + str(factor.unconditionedVariables()))
 
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        
+        # print(factor)
+        # factor_list = list(factor)
+        # print(eliminationVariable)
+        # print(factor.conditionedVariables())
+        # print(factor.unconditionedVariables())
+        
+        eliminatedConditionedVar = factor.conditionedVariables()
+        eliminatedUnConditoinedVar = factor.unconditionedVariables()
+        
+        if eliminationVariable in eliminatedConditionedVar:
+            eliminatedConditionedVar.remove(eliminationVariable)
+        if eliminationVariable in eliminatedUnConditoinedVar:
+            eliminatedUnConditoinedVar.remove(eliminationVariable)
+
+        # print(factor)
+        eliminatedFactor = Factor(eliminatedUnConditoinedVar, eliminatedConditionedVar, factor.variableDomainsDict())
+        # print(factor.variableDomainsDict()[eliminationVariable])
+        
+        for eliminatedAssignment in eliminatedFactor.getAllPossibleAssignmentDicts():
+            # eliminatedProbability = 1
+            # eliminatedProbability  *= factor.getProbability(eliminatedAssignment)
+            # print(eliminatedAssignment)
+            eliminatedProbability = 0
+            for eliminated in factor.variableDomainsDict()[eliminationVariable]:
+                eliminatedAssignment[eliminationVariable] = eliminated
+                eliminatedProbability += factor.getProbability(eliminatedAssignment)
+            eliminatedFactor.setProbability(eliminatedAssignment, eliminatedProbability)
+            # print(factor.getProbability(eliminatedAssignment))
+            # Factor.setProbability(joinFactor, joinAssignment, joinProbability)
+        
+        return eliminatedFactor
+        # raiseNotDefined()
         "*** END YOUR CODE HERE ***"
 
     return eliminate
