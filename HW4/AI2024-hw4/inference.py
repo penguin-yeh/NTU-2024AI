@@ -231,7 +231,7 @@ def inferenceByVariableEliminationWithCallTracking(callTrackingList=None):
             if(len(joinedFactor.unconditionedVariables()) > 1):
                 eliminatedFactor = eliminate(joinedFactor, joinVariable)
                 currentFactorsList.append(eliminatedFactor)
-        print(currentFactorsList)
+        # print(currentFactorsList)
         # currentFactorsList should contain the connected components of the graph now as factors, must join the connected components
         fullJoint = joinFactors(currentFactorsList)
         # print(fullJoint)
@@ -626,9 +626,9 @@ class ExactInference(InferenceModule):
         """
         "*** YOUR CODE HERE ***"
         
-        print(gameState.getPacmanPosition())
-        print(self.getJailPosition())
-        print(self.allPositions)
+        # print(gameState.getPacmanPosition())
+        # print(self.getJailPosition())
+        # print(self.allPositions)
         
         # iterate all potential position
         for position in self.allPositions:
@@ -699,7 +699,25 @@ class ParticleFilter(InferenceModule):
         """
         self.particles = []
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        
+        # print(self.numParticles)
+        # print(len(self.legalPositions))
+        eachSize = int(self.numParticles / len(self.legalPositions))
+        leftSize = self.numParticles - eachSize * len(self.legalPositions)
+        # print(leftSize)
+        
+        for position in self.legalPositions:
+            for i in range(int(eachSize)):
+                self.particles.append(position)
+        
+        while leftSize != 0:
+            for position in self.legalPositions:
+                self.particles.append(position)
+                leftSize -= 1
+                if leftSize == 0:
+                    break
+        
+        # raiseNotDefined()
         "*** END YOUR CODE HERE ***"
 
     def getBeliefDistribution(self):
@@ -711,7 +729,15 @@ class ParticleFilter(InferenceModule):
         This function should return a normalized distribution.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        
+        particleDistribution = DiscreteDistribution()
+        for particle in self.particles:
+            particleDistribution[particle] += 1.0
+        particleDistribution.normalize()
+        
+        return particleDistribution
+        
+        # raiseNotDefined()
         "*** END YOUR CODE HERE ***"
     
     ########### ########### ###########
@@ -731,7 +757,24 @@ class ParticleFilter(InferenceModule):
         the DiscreteDistribution may be useful.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        
+        # print(gameState.getPacmanPosition())
+        # print(self.getJailPosition())
+        
+        newDistribution = DiscreteDistribution()
+        for particle in self.particles:
+            # print(len(particle))
+            nextProb = self.getObservationProb(observation, gameState.getPacmanPosition(), particle, self.getJailPosition())
+            newDistribution[particle] += nextProb
+        newDistribution.normalize()
+        
+        if newDistribution.total() == 0:
+            self.initializeUniformly(gameState)
+        else:        
+            samples = [newDistribution.sample() for _ in range(len(self.particles))]
+            self.particles = samples
+        
+        # raiseNotDefined()
         "*** END YOUR CODE HERE ***"
     
     ########### ########### ###########
@@ -744,6 +787,12 @@ class ParticleFilter(InferenceModule):
         gameState.
         """
         "*** YOUR CODE HERE ***"
-        raiseNotDefined()
+        
+        afterParticles = []
+        for particle in self.particles:
+            newPosDist = self.getPositionDistribution(gameState, particle)
+            afterParticles.append(newPosDist.sample())
+        self.particles = afterParticles
+        # raiseNotDefined()
         "*** END YOUR CODE HERE ***"
 
