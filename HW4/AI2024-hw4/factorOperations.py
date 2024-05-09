@@ -221,10 +221,11 @@ def eliminateWithCallTracking(callTrackingList=None):
         for eliminatedAssignment in eliminatedFactor.getAllPossibleAssignmentDicts():
             # eliminatedProbability = 1
             # eliminatedProbability  *= factor.getProbability(eliminatedAssignment)
-            # print(eliminatedAssignment)
+            # print(factor.variableDomainsDict())
             eliminatedProbability = 0
             for eliminated in factor.variableDomainsDict()[eliminationVariable]:
                 eliminatedAssignment[eliminationVariable] = eliminated
+                # print(eliminatedAssignment)
                 eliminatedProbability += factor.getProbability(eliminatedAssignment)
             eliminatedFactor.setProbability(eliminatedAssignment, eliminatedProbability)
             # print(factor.getProbability(eliminatedAssignment))
