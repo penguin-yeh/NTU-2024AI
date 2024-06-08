@@ -1,4 +1,3 @@
-import random
 import os
 import time
 import argparse
@@ -12,7 +11,9 @@ from tqdm import tqdm
 
 from rl_algorithm import DQN
 from custom_env import ImageEnv
+from utils import seed_everything, YOUR_CODE_HERE
 import utils
+import matplotlib.pyplot as plt
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -22,7 +23,7 @@ def parse_args():
     parser.add_argument('--image_hw', type=int, default=84, help='The height and width of the image')
     parser.add_argument('--num_envs', type=int, default=4)
     # DQN hyperparameters
-    parser.add_argument('--lr', type=float, default=1e-4)
+    parser.add_argument('--lr', type=float, default=5e-4)
     parser.add_argument('--epsilon', type=float, default=0.9)
     parser.add_argument('--epsilon_min', type=float, default=0.05)
     parser.add_argument('--gamma', type=float, default=0.99)
@@ -31,7 +32,7 @@ def parse_args():
     parser.add_argument('--buffer_size', type=int, default=int(1e5))
     parser.add_argument('--target_update_interval', type=int, default=10000)
     # training hyperparameters
-    parser.add_argument('--max_steps', type=int, default=int(2.5e5))
+    parser.add_argument('--max_steps', type=int, default=int(5e5))
     parser.add_argument('--eval_interval', type=int, default=10000)
     # others
     parser.add_argument('--save_root', type=Path, default='./submissions')
@@ -42,77 +43,102 @@ def parse_args():
     parser.add_argument('--eval_model_path', type=str, default=None, help='the path of the model to evaluate')
     return parser.parse_args()
 
-def seed_everything(seed, env):
-    "Do not modify this function"
-    random.seed(seed)
-    np.random.seed(seed)
-    os.environ['PYTHONHASHSEED'] = str(seed)
-    torch.manual_seed(seed)
-    torch.cuda.manual_seed(seed)
-    torch.backends.cudnn.deterministic = True
-    env.seed(seed)
-
-def validaiton(agent, num_evals=5):
-    eval_env = gym.make(args.env_name)
+def validation(agent, num_evals=5):
+    eval_env = gym.make('ALE/MsPacman-v5')
     eval_env = ImageEnv(eval_env)
     
     scores = 0
     for i in range(num_evals):
-        "*** YOUR CODE HERE ***"
-        utils.raiseNotDefined()
-        
+        (state, _), done = eval_env.reset(), False
+        while not done:
+            
+            # "*** YOUR CODE HERE ***"
+            # utils.raiseNotDefined()
+            
+            # do action from your agent
+            action = agent.act(state, training=False)
+            
+            # get your action feedback from environment
+            next_state, reward, terminated, truncated, info = eval_env.step(action)
+            
+            state = next_state
+            scores += reward
+            done = terminated or truncated
+            
     return np.round(scores / num_evals, 4)
 
 def train(agent, env):
-    logging_info = {'Step': [], 'AvgScore': []}
+    history = {'Step': [], 'AvgScore': [], 'Loss': []}
 
     (state, _) = env.reset()
     
     for _ in tqdm(range(args.max_steps)):
         
-        "*** YOUR CODE HERE ***"
-        utils.raiseNotDefined()
+        action = agent.act(state)
+        next_state, reward, terminated, truncated, _ = env.step(action)
+        result = agent.process((state, action, reward, next_state, terminated))  # You can track q-losses over training from `result` variable.
         
-        # agent act
-        
-        # env step
-        
-        # agent process
+        state = next_state
+        if terminated or truncated:
+            state, _ = env.reset()
         
         if agent.total_steps % args.eval_interval == 0:
-            avg_score = validaiton(agent)
+            avg_score = validation(agent)
+            history['Step'].append(agent.total_steps)
+            history['AvgScore'].append(avg_score)
+            history['Loss'].append(result["value_loss"])
             
-            "*** YOUR CODE HERE ***"
-            utils.raiseNotDefined()
-            # logging
+            # Log info to plot your figure
+            fig, ax1 = plt.subplots()
+
+            ax1.set_xlabel('Step')
+            ax1.set_ylabel('Average Score', color='tab:blue')
+            ax1.plot(history['Step'], history['AvgScore'], label='Average Score', color='tab:blue')
+            ax1.tick_params(axis='y', labelcolor='tab:blue')
+
+            ax2 = ax1.twinx()
+            ax2.set_ylabel('Loss', color='tab:red')
+            ax2.plot(history['Step'], history['Loss'], label='Loss', color='tab:red')
+            ax2.tick_params(axis='y', labelcolor='tab:red')
+
+            fig.tight_layout()
+            plt.title('Training History')
+            fig.legend(loc='upper right', bbox_to_anchor=(1,1), bbox_transform=ax1.transAxes)
+            plt.savefig(save_dir / 'training_history.png')
+            plt.close()
             
-            # save model
-            print("Step: {}, AvgScore: {}".format(agent.total_steps, avg_score))
+            # Save model
+            torch.save(agent.network.state_dict(), save_dir / 'pacman_dqn.pt')
+            print("Step: {}, AvgScore: {}, ValueLoss: {}".format(agent.total_steps, avg_score, result["value_loss"]))
 
 def evaluate(agent, eval_env, capture_frames=True):
     seed_everything(0, eval_env) # don't modify
     
     # load the model
     if agent is None:
-        "*** YOUR CODE HERE ***"
-        utils.raiseNotDefined()
+        action_dim = eval_env.action_space.n
+        state_dim = (args.num_envs, args.image_hw, args.image_hw)
+        agent = DQN(state_dim=state_dim, action_dim=action_dim)
+        agent.network.load_state_dict(torch.load(args.eval_model_path))
     
-    # reset env
-    done = False
+    (state, _), done = eval_env.reset(), False
+
     scores = 0
-    
-    # Record the evaluation video
+    # Record the frames
     if capture_frames:
         writer = imageio.get_writer(save_dir / 'mspacman.mp4', fps=10)
-    
+
     while not done:
         if capture_frames:
             writer.append_data(eval_env.render())
         else:
             eval_env.render()
         
-        "*** YOUR CODE HERE ***"
-        utils.raiseNotDefined()
+        action = agent.act(state, training=False)
+        next_state, reward, terminated, truncated, info = eval_env.step(action)
+        state = next_state
+        scores += reward
+        done = terminated or truncated
     if capture_frames:
         writer.close()
     print("The score of the agent: ", scores)
@@ -137,7 +163,7 @@ if __name__ == "__main__":
     args = parse_args()
     
     # save_dir = args.save_root / f"{args.env_name.replace('/', '-')}__{args.exp_name}__{int(time.time())}"
-    save_dir = args.save_root # do whatever you want
+    save_dir = args.save_root
     if not save_dir.exists():
         save_dir.mkdir(parents=True)
     
