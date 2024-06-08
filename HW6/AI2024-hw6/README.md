@@ -38,12 +38,12 @@ python -m bitsandbytes
 ```bash
 bash run.sh exp_name model_name wandb_token
 ```
-### - Set custom epochs
+### Set custom epochs
 ```bash
 bash run.sh exp_name model_name wandb_token num_epochs
 ```
 
-### - Set custom epochs and beta
+### Set custom epochs and beta
 ```bash
 bash run.sh exp_name model_name wandb_token num_epochs beta
 ```
