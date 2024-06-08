@@ -34,7 +34,7 @@ python -m bitsandbytes
 ```
 ## Training
 
-### - Use default hyperparameters
+### Use default hyperparameters
 ```bash
 bash run.sh exp_name model_name wandb_token
 ```
